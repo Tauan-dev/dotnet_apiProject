@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-public class ApliccationDbContext : ApliccationDbContext {
+public class ApliccationDbContext : DbContext {
     public ApliccationDbContext(DbContextOptions<ApliccationDbContext> options) : base(options) {
     }
     public DbSet<Product> Products {get; set;}

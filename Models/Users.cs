@@ -1,11 +1,12 @@
 public class User  {
-    public int id { get; set; },
-    public string name { get; set; },
-    public string birthdate{ get; set; },
-    public string email { get; set; },
+    public int id { get; set; }
+    public string name { get; set; }
+    public string birthdate{ get; set; }
+    public string email { get; set; }
 
-    // relations many to many
+    // relations one to many
 
     public ICollection<Contact> Contatcs {get; set; }
     
+    public ICollection<Order>  Orders {get;set;}
 }
