@@ -1,10 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 
-public class ApliccationDbContext : DbContext {
-    public ApliccationDbContext(DbContextOptions<ApliccationDbContext> options) : base(options) {
+
+namespace ApiProduct.Data {
+public class ApplicationDbContext : DbContext {
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {
     }
     public DbSet<Product> Products {get; set;}
     public DbSet<Order> Orders {get; set;}
     public DbSet<Contact> Contacts {get; set;}
     public DbSet<User> Users {get; set;}
+}
 }
