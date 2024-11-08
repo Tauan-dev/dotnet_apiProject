@@ -4,7 +4,7 @@ public class Order {
     public int? quantity { get; set; }
 
     // relations many to one 
-    public int? idUSer {get;set;}
+    public int? idUser {get;set;}
     public User? User { get; set;}
 
     //relations many to many 
