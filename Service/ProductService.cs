@@ -1,101 +1,104 @@
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using ApiProduct.Service.Interface;
+using Microsoft.EntityFrameworkCore;
 using ApiProduct.Data;
+using ApiProduct.Service.Interface;
+using ApiProduct.Dto.Product;
+using ApiProduct.Models;
 
-public class ProductService : IProductService
+namespace ApiProduct.Service
 {
-    private readonly ApplicationDbContext _dbContext;
-
-    public ProductService(ApplicationDbContext dbContext)
+    public class ProductService : IProductService
     {
-        _dbContext = dbContext;
-    }
+        private readonly ApplicationDbContext _dbContext;
 
-    // Método para obter todos os produtos e retornar como ProductDTO
-    public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync()
-    {
-        return await _dbContext.Products
-            .Select(product => new ProductDTO
+        public ProductService(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync()
+        {
+            return await _dbContext.Products
+                .Select(product => new ProductDTO
+                {
+                    ProductId = product.ProductId ?? 0,
+                    Name = product.Name,
+                    Type = product.Type,
+                    Price = product.Price ?? 0
+                })
+                .ToListAsync();
+        }
+
+        public async Task<ProductDTO> GetProductByIdAsync(int productId)
+        {
+            var product = await _dbContext.Products.FindAsync(productId);
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Produto não encontrado");
+            }
+
+            return new ProductDTO
             {
                 ProductId = product.ProductId ?? 0,
                 Name = product.Name,
                 Type = product.Type,
                 Price = product.Price ?? 0
-            })
-            .ToListAsync();
-    }
-
-    // Método para obter um produto específico pelo ID e retornar como ProductDTO
-    public async Task<ProductDTO> GetProductByIdAsync(int productId)
-    {
-        var product = await _dbContext.Products.FindAsync(productId);
-        if (product == null)
-        {
-            throw new KeyNotFoundException("Produto não cadastrado");
+            };
         }
 
-        return new ProductDTO
+        public async Task<ProductDTO> CreateProductAsync(CreateProductDTO productDto)
         {
-            ProductId = product.ProductId ?? 0,
-            Name = product.Name,
-            Type = product.Type,
-            Price = product.Price ?? 0
-        };
-    }
+            var product = new Product
+            {
+                Name = productDto.Name,
+                Type = productDto.Type,
+                Price = productDto.Price
+            };
 
-    // Método para criar um novo produto usando CreateProductDTO
-    public async Task<ProductDTO> CreateProductAsync(CreateProductDTO createProductDto)
-    {
-        var product = new Product
-        {
-            Name = createProductDto.Name,
-            Type = createProductDto.Type,
-            Price = createProductDto.Price
-        };
+            _dbContext.Products.Add(product);
+            await _dbContext.SaveChangesAsync();
 
-        _dbContext.Products.Add(product);
-        await _dbContext.SaveChangesAsync();
-
-        return new ProductDTO
-        {
-            ProductId = product.ProductId ?? 0,
-            Name = product.Name,
-            Type = product.Type,
-            Price = product.Price ?? 0
-        };
-    }
-
-    // Método para atualizar um produto usando UpdateProductDTO
-    public async Task<bool> UpdateProductAsync(int productId, UpdateProductDTO updateProductDto)
-    {
-        var existingProduct = await _dbContext.Products.FindAsync(productId);
-        if (existingProduct == null)
-        {
-            throw new KeyNotFoundException("Produto não cadastrado");
+            return new ProductDTO
+            {
+                ProductId = product.ProductId ?? 0,
+                Name = product.Name,
+                Type = product.Type,
+                Price = product.Price ?? 0
+            };
         }
 
-        existingProduct.Name = updateProductDto.Name;
-        existingProduct.Type = updateProductDto.Type;
-        existingProduct.Price = updateProductDto.Price;
-
-        _dbContext.Entry(existingProduct).State = EntityState.Modified;
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    // Método para deletar um produto
-    public async Task<bool> DeleteProductAsync(int productId)
-    {
-        var product = await _dbContext.Products.FindAsync(productId);
-        if (product == null)
+        public async Task<bool> UpdateProductAsync(int productId, UpdateProductDTO productDto)
         {
-            throw new KeyNotFoundException("Produto não cadastrado");
+            var product = await _dbContext.Products.FindAsync(productId);
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Produto não encontrado");
+            }
+
+            product.Name = productDto.Name;
+            product.Type = productDto.Type;
+            product.Price = productDto.Price;
+
+            _dbContext.Entry(product).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
 
-        _dbContext.Products.Remove(product);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        public async Task<bool> DeleteProductAsync(int productId)
+        {
+            var product = await _dbContext.Products.FindAsync(productId);
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Produto não encontrado");
+            }
+
+            _dbContext.Products.Remove(product);
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

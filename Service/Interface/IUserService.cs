@@ -1,11 +1,12 @@
+using ApiProduct.Dto.User;
 namespace ApiProduct.Service.Interface
 {
-    public interface IUserService {
-    Task<IEnumerable<User>> GetAllUsersAsync();
-    Task<User> GetUserByIdAsync(int userId);
-    Task<User> CreateUserAsync(User user);
-    Task<bool> UpdateUserAsync(int userId, User user);
+    public interface IUserService
+{
+    Task<IEnumerable<UserDTO>> GetAllUsersAsync();
+    Task<UserDTO> GetUserByIdAsync(int userId);
+    Task<UserDTO> CreateUserAsync(CreateUserDTO user);
+    Task<bool> UpdateUserAsync(int userId, UpdateUserDTO user);
     Task<bool> DeleteUserAsync(int userId);
 }
 }
-
