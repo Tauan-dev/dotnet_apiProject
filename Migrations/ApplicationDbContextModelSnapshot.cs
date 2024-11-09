@@ -22,155 +22,151 @@ namespace ApiProduct.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("Contact", b =>
+            modelBuilder.Entity("ApiProduct.Models.Contact", b =>
                 {
-                    b.Property<int?>("contactId")
+                    b.Property<int?>("ContactId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("contactId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("ContactId"));
 
-                    b.Property<int?>("idUser")
+                    b.Property<int?>("IdUser")
                         .HasColumnType("int");
 
-                    b.Property<string>("number")
+                    b.Property<string>("Number")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("type")
+                    b.Property<string>("Type")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("userId")
-                        .HasColumnType("int");
+                    b.HasKey("ContactId");
 
-                    b.HasKey("contactId");
-
-                    b.HasIndex("userId");
+                    b.HasIndex("IdUser");
 
                     b.ToTable("Contacts");
                 });
 
-            modelBuilder.Entity("Order", b =>
+            modelBuilder.Entity("ApiProduct.Models.Order", b =>
                 {
-                    b.Property<int?>("orderId")
+                    b.Property<int?>("OrderId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("orderId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("OrderId"));
 
-                    b.Property<int?>("idUSer")
+                    b.Property<int?>("IdUser")
                         .HasColumnType("int");
 
-                    b.Property<int?>("quantity")
+                    b.Property<int?>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("status")
+                    b.Property<string>("Status")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("userId")
-                        .HasColumnType("int");
+                    b.HasKey("OrderId");
 
-                    b.HasKey("orderId");
-
-                    b.HasIndex("userId");
+                    b.HasIndex("IdUser");
 
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("OrderProduct", b =>
+            modelBuilder.Entity("ApiProduct.Models.Product", b =>
                 {
-                    b.Property<int>("OrdersorderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductsproductId")
-                        .HasColumnType("int");
-
-                    b.HasKey("OrdersorderId", "ProductsproductId");
-
-                    b.HasIndex("ProductsproductId");
-
-                    b.ToTable("OrderProduct");
-                });
-
-            modelBuilder.Entity("Product", b =>
-                {
-                    b.Property<int?>("productId")
+                    b.Property<int?>("ProductId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("productId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("ProductId"));
 
-                    b.Property<string>("name")
+                    b.Property<string>("Name")
                         .HasColumnType("longtext");
 
-                    b.Property<decimal?>("price")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<string>("type")
+                    b.Property<string>("Type")
                         .HasColumnType("longtext");
 
-                    b.HasKey("productId");
+                    b.HasKey("ProductId");
 
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("User", b =>
+            modelBuilder.Entity("ApiProduct.Models.User", b =>
                 {
-                    b.Property<int?>("userId")
+                    b.Property<int?>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("userId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int?>("UserId"));
 
-                    b.Property<string>("birthdate")
+                    b.Property<string>("Birthdate")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("email")
+                    b.Property<string>("Email")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("name")
+                    b.Property<string>("Name")
                         .HasColumnType("longtext");
 
-                    b.HasKey("userId");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Contact", b =>
+            modelBuilder.Entity("OrderProduct", b =>
                 {
-                    b.HasOne("User", "User")
-                        .WithMany("Contatcs")
-                        .HasForeignKey("userId");
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderProduct");
+                });
+
+            modelBuilder.Entity("ApiProduct.Models.Contact", b =>
+                {
+                    b.HasOne("ApiProduct.Models.User", "User")
+                        .WithMany("Contacts")
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Order", b =>
+            modelBuilder.Entity("ApiProduct.Models.Order", b =>
                 {
-                    b.HasOne("User", "User")
+                    b.HasOne("ApiProduct.Models.User", "User")
                         .WithMany("Orders")
-                        .HasForeignKey("userId");
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("OrderProduct", b =>
                 {
-                    b.HasOne("Order", null)
+                    b.HasOne("ApiProduct.Models.Order", null)
                         .WithMany()
-                        .HasForeignKey("OrdersorderId")
+                        .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Product", null)
+                    b.HasOne("ApiProduct.Models.Product", null)
                         .WithMany()
-                        .HasForeignKey("ProductsproductId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("User", b =>
+            modelBuilder.Entity("ApiProduct.Models.User", b =>
                 {
-                    b.Navigation("Contatcs");
+                    b.Navigation("Contacts");
 
                     b.Navigation("Orders");
                 });
