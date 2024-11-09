@@ -1,9 +1,13 @@
-public class Contact {
-    public int? contactId {get;set;}
-    public string? type {get;set;}
-    public string? number  {get;set;}
+namespace ApiProduct.Models
+{
+   public class Contact
+   {
+       public int? ContactId { get; set; }
+       public string? Type { get; set; }
+       public string? Number { get; set; }
 
-    //many to one
-    public int? idUser {get;set;}
-    public User? User {get;set;}
+       // Relacionamento Many-to-One
+       public int? IdUser { get; set; }
+       public User? User { get; set; }
+   }
 }

@@ -1,12 +1,14 @@
-public class User  {
-    public int? userId { get; set; }
-    public string? name { get; set; }
-    public string? birthdate{ get; set; }
-    public string? email { get; set; }
+namespace ApiProduct.Models
+{
+    public class User
+    {
+        public int? UserId { get; set; }
+        public string? Name { get; set; }
+        public string? Birthdate { get; set; }
+        public string? Email { get; set; }
 
-    // relations one to many
-
-    public ICollection<Contact>? Contatcs {get; set; }
-    
-    public ICollection<Order>?  Orders {get;set;}
+        // Relacionamentos One-to-Many
+        public ICollection<Contact> Contacts { get; set; } = new List<Contact>();
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
+    }
 }

@@ -1,11 +1,13 @@
-public class Product {
-    public int? productId { get; set; }
-    public string? name { get; set; }
-    public string? type { get; set; }
-    public decimal? price { get; set; }
+namespace ApiProduct.Models
+{
+    public class Product
+    {
+        public int? ProductId { get; set; }
+        public string? Name { get; set; }
+        public string? Type { get; set; }
+        public decimal? Price { get; set; }
 
-
-    //relations many to many 
-
-    public ICollection<Order>? Orders { get; set;}
+        // Relacionamento Many-to-Many com Order
+        public ICollection<Order>? Orders { get; set; } 
+    }
 }

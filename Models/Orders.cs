@@ -1,13 +1,16 @@
-public class Order {
-    public int? orderId { get; set; }
-    public string? status { get; set; }
-    public int? quantity { get; set; }
+namespace ApiProduct.Models
+{
+    public class Order
+    {
+        public int? OrderId { get; set; }
+        public string? Status { get; set; }
+        public int? Quantity { get; set; }
 
-    // relations many to one 
-    public int? idUser {get;set;}
-    public User? User { get; set;}
+        // Relacionamento Many-to-One com User
+        public int? IdUser { get; set; }
+        public User? User { get; set; }
 
-    //relations many to many 
-
-    public ICollection<Product>? Products { get; set;}
+        // Relacionamento Many-to-Many com Product
+        public ICollection<Product>? Products { get; set; } 
+    }
 }
