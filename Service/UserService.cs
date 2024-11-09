@@ -1,113 +1,146 @@
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using ApiProduct.Service.Interface;
+using Microsoft.EntityFrameworkCore;
 using ApiProduct.Data;
+using ApiProduct.Service.Interface;
+using ApiProduct.Dto.User;
+using ApiProduct.Dto.Contact;
+using ApiProduct.Dto.Order;
+using ApiProduct.Models;
 
-public class UserService : IUserService
+namespace ApiProduct.Service
 {
-    private readonly ApplicationDbContext _dbContext;
-
-    public UserService(ApplicationDbContext dbContext)
+    public class UserService : IUserService
     {
-        _dbContext = dbContext;
-    }
+        private readonly ApplicationDbContext _dbContext;
 
-    // Método para obter todos os usuários e retornar como UserDTO
-    public async Task<IEnumerable<UserDTO>> GetAllUsersAsync()
-    {
-        return await _dbContext.Users
-            .Include(u => u.Contatcs) // Inclui contatos na consulta
-            .Include(u => u.Orders) // Inclui pedidos na consulta
-            .Select(user => new UserDTO
+        public UserService(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<IEnumerable<UserDTO>> GetAllUsersAsync()
+        {
+            var users = await _dbContext.Users
+             .Include(u => u.Contacts)
+             .Include(u => u.Orders)
+             .ThenInclude(o => o.Products)
+             .ToListAsync();
+
+            return users.Select(user => new UserDTO
             {
                 UserId = user.UserId ?? 0,
                 Name = user.Name,
                 Birthdate = user.Birthdate,
                 Email = user.Email,
-                ContactIds = user.Contatcs.Select(c => c.ContactId ?? 0).ToList(),
-                OrderIds = user.Orders.Select(o => o.OrderId ?? 0).ToList()
+                Contacts = user.Contacts?.Select(c => new ContactDTO
+                {
+                    ContactId = c.ContactId ?? 0,
+                    Type = c.Type,
+                    Number = c.Number,
+                    IdUser = c.IdUser ?? 0
+                }).ToList(),
+                Orders = user.Orders?.Select(o => new OrderDTO
+                {
+                    OrderId = o.OrderId ?? 0,
+                    Status = o.Status,
+                    Quantity = o.Quantity,
+                    IdUser = o.IdUser ?? 0,
+                    ProductIds = o.Products?.Select(p => p.ProductId ?? 0).ToList()
+                }).ToList(),
             })
-            .ToListAsync();
-    }
+                .ToList();
+        }
 
-    // Método para obter um usuário específico pelo ID e retornar como UserDTO
-    public async Task<UserDTO> GetUserByIdAsync(int userId)
-    {
-        var user = await _dbContext.Users
-            .Include(u => u.Contatcs)
+        public async Task<UserDTO> GetUserByIdAsync(int userId)
+        {
+            var user = await _dbContext.Users
+            .Include(u => u.Contacts)
             .Include(u => u.Orders)
             .FirstOrDefaultAsync(u => u.UserId == userId);
-        
-        if (user == null)
-        {
-            throw new KeyNotFoundException("Não foi possível encontrar o usuário");
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Usuário não encontrado");
+            }
+
+            return new UserDTO
+            {
+                UserId = user.UserId ?? 0,
+                Name = user.Name,
+                Birthdate = user.Birthdate,
+                Email = user.Email,
+                Contacts = user.Contacts?.Select(c => new ContactDTO
+                {
+                    ContactId = c.ContactId ?? 0,
+                    Type = c.Type,
+                    Number = c.Number,
+                    IdUser = c.IdUser ?? 0
+                }).ToList(),
+                Orders = user.Orders?.Select(o => new OrderDTO
+                {
+                    OrderId = o.OrderId ?? 0,
+                    Status = o.Status,
+                    Quantity = o.Quantity,
+                    IdUser = o.IdUser ?? 0,
+                    ProductIds = o.Products?.Select(p => p.ProductId ?? 0).ToList() // Lista de IDs de produtos
+                }).ToList()
+            };
+
         }
 
-        return new UserDTO
+        public async Task<UserDTO> CreateUserAsync(CreateUserDTO userDto)
         {
-            UserId = user.UserId ?? 0,
-            Name = user.Name,
-            Birthdate = user.Birthdate,
-            Email = user.Email,
-            ContactIds = user.Contatcs.Select(c => c.ContactId ?? 0).ToList(),
-            OrderIds = user.Orders.Select(o => o.OrderId ?? 0).ToList()
-        };
-    }
+            var user = new User
+            {
+                Name = userDto.Name,
+                Birthdate = userDto.Birthdate,
+                Email = userDto.Email
+            };
 
-    // Método para criar um novo usuário usando CreateUserDTO
-    public async Task<UserDTO> CreateUserAsync(CreateUserDTO createUserDto)
-    {
-        var user = new User
-        {
-            Name = createUserDto.Name,
-            Birthdate = createUserDto.Birthdate,
-            Email = createUserDto.Email
-        };
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync();
 
-        _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync();
-
-        return new UserDTO
-        {
-            UserId = user.UserId ?? 0,
-            Name = user.Name,
-            Birthdate = user.Birthdate,
-            Email = user.Email,
-            ContactIds = new List<int>(), // Inicialmente sem contatos
-            OrderIds = new List<int>() // Inicialmente sem pedidos
-        };
-    }
-
-    // Método para atualizar um usuário usando UpdateUserDTO
-    public async Task<bool> UpdateUserAsync(int userId, UpdateUserDTO updateUserDto)
-    {
-        var existingUser = await _dbContext.Users.FindAsync(userId);
-        if (existingUser == null)
-        {
-            throw new KeyNotFoundException("O Id do usuário não foi encontrado");
+            return new UserDTO
+            {
+                UserId = user.UserId ?? 0,
+                Name = user.Name,
+                Birthdate = user.Birthdate,
+                Email = user.Email
+            };
         }
 
-        existingUser.Name = updateUserDto.Name;
-        existingUser.Birthdate = updateUserDto.Birthdate;
-        existingUser.Email = updateUserDto.Email;
-
-        _dbContext.Entry(existingUser).State = EntityState.Modified;
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    // Método para deletar um usuário
-    public async Task<bool> DeleteUserAsync(int userId)
-    {
-        var user = await _dbContext.Users.FindAsync(userId);
-        if (user == null)
+        public async Task<bool> UpdateUserAsync(int userId, UpdateUserDTO userDto)
         {
-            throw new KeyNotFoundException("Usuário não existe");
+            var user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Usuário não encontrado");
+            }
+
+            user.Name = userDto.Name;
+            user.Birthdate = userDto.Birthdate;
+            user.Email = userDto.Email;
+
+            _dbContext.Entry(user).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
 
-        _dbContext.Users.Remove(user);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        public async Task<bool> DeleteUserAsync(int userId)
+        {
+            var user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Usuário não encontrado");
+            }
+
+            _dbContext.Users.Remove(user);
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

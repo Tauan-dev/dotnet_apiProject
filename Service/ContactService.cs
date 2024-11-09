@@ -1,101 +1,103 @@
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using ApiProduct.Service.Interface;
-using ApiProduct.Data;
+using Microsoft.EntityFrameworkCore;
+using ApiProduct.Data; // Certifique-se de que ApplicationDbContext está neste namespace
+using ApiProduct.Service.Interface; // Interface IContactService
+using ApiProduct.Dto.Contact;
+using ApiProduct.Models;
 
-public class ContactService : IContactService
+namespace ApiProduct.Service
 {
-    private readonly ApplicationDbContext _dbContext;
-
-    public ContactService(ApplicationDbContext dbContext)
+    public class ContactService : IContactService
     {
-        _dbContext = dbContext;
-    }
+        private readonly ApplicationDbContext _dbContext;
 
-    // Método para obter todos os contatos e retornar como ContactDTO
-    public async Task<IEnumerable<ContactDTO>> GetAllContactsAsync()
-    {
-        return await _dbContext.Contacts
-            .Select(contact => new ContactDTO
+        public ContactService(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<IEnumerable<ContactDTO>> GetAllContactsAsync()
+        {
+            return await _dbContext.Contacts
+                .Select(contact => new ContactDTO
+                {
+                    ContactId = contact.ContactId ?? 0,
+                    Type = contact.Type,
+                    Number = contact.Number,
+                    IdUser = contact.IdUser ?? 0
+                })
+                .ToListAsync();
+        }
+
+        public async Task<ContactDTO> GetContactByIdAsync(int contactId)
+        {
+            var contact = await _dbContext.Contacts.FindAsync(contactId);
+            if (contact == null)
+            {
+                throw new KeyNotFoundException("Contato não encontrado");
+            }
+
+            return new ContactDTO
             {
                 ContactId = contact.ContactId ?? 0,
                 Type = contact.Type,
                 Number = contact.Number,
-                UserId = contact.IdUser ?? 0
-            })
-            .ToListAsync();
-    }
-
-    // Método para obter um contato específico pelo ID e retornar como ContactDTO
-    public async Task<ContactDTO> GetContactByIdAsync(int contactId)
-    {
-        var contact = await _dbContext.Contacts.FindAsync(contactId);
-        if (contact == null)
-        {
-            throw new KeyNotFoundException("Contato não encontrado");
+                IdUser = contact.IdUser ?? 0
+            };
         }
 
-        return new ContactDTO
+        public async Task<ContactDTO> CreateContactAsync(CreateContactDTO contactDto)
         {
-            ContactId = contact.ContactId ?? 0,
-            Type = contact.Type,
-            Number = contact.Number,
-            UserId = contact.IdUser ?? 0
-        };
-    }
+            var contact = new Contact
+            {
+                Type = contactDto.Type,
+                Number = contactDto.Number,
+                IdUser = contactDto.IdUser
+            };
 
-    // Método para criar um novo contato usando CreateContactDTO
-    public async Task<ContactDTO> CreateContactAsync(CreateContactDTO createContactDto)
-    {
-        var contact = new Contact
-        {
-            Type = createContactDto.Type,
-            Number = createContactDto.Number,
-            IdUser = createContactDto.UserId
-        };
+            _dbContext.Contacts.Add(contact);
+            await _dbContext.SaveChangesAsync();
 
-        _dbContext.Contacts.Add(contact);
-        await _dbContext.SaveChangesAsync();
-
-        return new ContactDTO
-        {
-            ContactId = contact.ContactId ?? 0,
-            Type = contact.Type,
-            Number = contact.Number,
-            UserId = contact.IdUser ?? 0
-        };
-    }
-
-    // Método para atualizar um contato usando UpdateContactDTO
-    public async Task<bool> UpdateContactAsync(int contactId, UpdateContactDTO updateContactDto)
-    {
-        var existingContact = await _dbContext.Contacts.FindAsync(contactId);
-        if (existingContact == null)
-        {
-            return false;
+            return new ContactDTO
+            {
+                ContactId = contact.ContactId ?? 0,
+                Type = contact.Type,
+                Number = contact.Number,
+                IdUser = contact.IdUser ?? 0
+            };
         }
 
-        existingContact.Type = updateContactDto.Type;
-        existingContact.Number = updateContactDto.Number;
-        existingContact.IdUser = updateContactDto.UserId;
-
-        _dbContext.Entry(existingContact).State = EntityState.Modified;
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    // Método para deletar um contato
-    public async Task<bool> DeleteContactAsync(int contactId)
-    {
-        var contact = await _dbContext.Contacts.FindAsync(contactId);
-        if (contact == null)
+        public async Task<bool> UpdateContactAsync(int contactId, UpdateContactDTO contactDto)
         {
-            throw new KeyNotFoundException("Contato não cadastrado");
+            var contact = await _dbContext.Contacts.FindAsync(contactId);
+            if (contact == null)
+            {
+                throw new KeyNotFoundException("Contato não encontrado");
+            }
+
+            contact.Type = contactDto.Type;
+            contact.Number = contactDto.Number;
+
+            _dbContext.Entry(contact).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
 
-        _dbContext.Contacts.Remove(contact);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        public async Task<bool> DeleteContactAsync(int contactId)
+        {
+            var contact = await _dbContext.Contacts.FindAsync(contactId);
+            if (contact == null)
+            {
+                throw new KeyNotFoundException("Contato não encontrado");
+            }
+
+            _dbContext.Contacts.Remove(contact);
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }
